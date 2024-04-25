@@ -1,18 +1,17 @@
 name: Publish release artifacts
 
-# Permission to write to the repo (needed to publish artifacts)
-permissions:
-  contents: write
-
 env:
   module_id: smoothedcontroller
-  qmodName: smoothedcontroller
-  cache-name: SmoothedController_cache
+  qmodName: SmoothedController 
+  cache-name: SC_prod_cache
 
 on:
   push:
     tags:
       - "v*.*.*"
+
+permissions:
+  contents: write
 
 jobs:
   publish:
@@ -22,8 +21,10 @@ jobs:
     - name: Get Mod version from tag name
       id: modversion
       run: |
+        echo "VERSION_TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
         TEMP=$(echo "$GITHUB_REF_NAME" | grep -Po "(?<=v)\d+.\d+.\d+")
         echo "VERSION=$TEMP" >> $GITHUB_ENV
+
     - uses: actions/checkout@v3
       name: Checkout
       with:
@@ -32,80 +33,71 @@ jobs:
 
     - uses: seanmiddleditch/gha-setup-ninja@v3
 
+    - name: Setup Canary NDK
+      id: setup-ndk
+      uses: ./.github/actions/canary-ndk
+
     - name: Create ndkpath.txt
       run: |
-        echo "$ANDROID_NDK_LATEST_HOME" > ${GITHUB_WORKSPACE}/ndkpath.txt
+        echo ${{ steps.setup-ndk.outputs.ndk-path }} > ${GITHUB_WORKSPACE}/ndkpath.txt
         cat ${GITHUB_WORKSPACE}/ndkpath.txt
+
     - name: Get QPM
-      if: steps.cache-qpm.outputs.cache-hit != 'true'
-      uses: dawidd6/action-download-artifact@v2
+      uses: Fernthedev/qpm-action@main
       with:
-        github_token: ${{secrets.GITHUB_TOKEN}}
-        workflow: cargo-build.yml
-        name: linux-qpm-rust
-        path: QPM
-        repo: RedBrumbler/QuestPackageManager-Rust
-        
-    - name: QPM Collapse
-      run: |
-        chmod +x ./QPM/qpm-rust
-        ./QPM/qpm-rust collapse
-    - name: QPM Dependencies Cache
-      id: cache-qpm-deps
-      uses: actions/cache@v3
-      env:
-        cache-name: cache-qpm-deps
-      with:
-        path: /home/runner/.local/share/QPM-Rust/cache
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('qpm.json') }}
-        restore-keys: |
-          ${{ runner.os }}-build-${{ env.cache-name }}-
-          ${{ runner.os }}-build-
-          ${{ runner.os }}-
-    - name: QPM Restore
-      run: |
-        chmod +x ./QPM/qpm-rust
-        ./QPM/qpm-rust restore
-    - name: QPM Legacy fix
-      run: |
-        chmod +x ./QPM/qpm-rust
-        ./QPM/qpm-rust cache legacy-fix
-    - name: List Post Restore
-      run: |
-        echo includes:
-        ls -la ${GITHUB_WORKSPACE}/extern/includes
-        echo libs:
-        ls -la ${GITHUB_WORKSPACE}/extern/libs
-        echo cache:
-        ls -la $HOME/.local/share/QPM-Rust/cache
+        #required
+        workflow_token: ${{secrets.GITHUB_TOKEN}}
+        restore: true # will run restore on download
+        cache: true #will cache dependencies
     
     - name: QPM Edit Version
       run: |
-        ./QPM/qpm-rust package edit --version "${{ env.VERSION }}"
+        qpm package edit --version "${{ env.VERSION }}"
     
     - name: Build
       run: |
         cd ${GITHUB_WORKSPACE}
-        pwsh -Command ./Build-Binary.ps1
-        ./QPM/qpm-rust qmod build
+        pwsh -Command ./scripts/build.ps1
+        qpm qmod build
+
     - name: Create Qmod
       run: |
-        pwsh -Command ./Build-QMod.ps1
-    - name: Get Library Name
+        pwsh -Command ./scripts/createqmod.ps1 ${{env.qmodName}}
+
+    - name: Get Library Name and Build ID
       id: libname
       run: |
         cd ./build/
         pattern="lib${module_id}*.so"
         files=( $pattern )
         echo "LIBNAME=${files[0]}" >> $GITHUB_ENV
+        echo "BUILD_ID=$(readelf -n ${files[0]} | grep -Po "(?<=Build ID: )[0-9a-f]+")" >> $GITHUB_ENV
+
     - name: Rename debug file
       run: mv "./build/debug/${{ env.LIBNAME }}" "./build/debug/debug_${{ env.LIBNAME }}"
+        
+    - name: Calculate SHA-256 of the qmod file
+      id: qmodsha
+      run: |
+        echo "QMOD_SHA=$(sha256sum ./${{ env.qmodName }}.qmod | grep -Po "^[0-9a-f]+")" >> $GITHUB_ENV
 
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
+        tag_name: ${{ env.VERSION_TAG }}
+        name: Smoothed Controller ${{ env.VERSION }}
+        generate_release_notes: true
+        body: |
+          ---
+
+          ### Build info
+          
+          SHA-256: ${{ env.QMOD_SHA }}
+          Build ID: ${{ env.BUILD_ID }}
         files: |
-          ./${{ env.qmodName }}*.qmod
+          ./${{ env.qmodName }}.qmod
           ./build/${{ env.LIBNAME }}
           ./build/debug/debug_${{ env.LIBNAME }}
+        draft: true
+        prerelease: false

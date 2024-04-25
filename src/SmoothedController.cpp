@@ -1,11 +1,16 @@
 #include "SmoothedController.hpp"
 #include "SmoothedControllerConfig.hpp"
+#include "logging.hpp"
+#include "bsml/shared/BSML/MainThreadScheduler.hpp"
+#include "bsml/shared/BSML.hpp"
+#include "bsml/shared/BSML-Lite/Creation/Text.hpp"
+#include "bsml/shared/BSML-Lite/Creation/Layout.hpp"
 
 void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToHierarchy, bool screenSystemEnabling) {
     using namespace UnityEngine;
 
     if (firstActivation) {
-        GameObject* container = QuestUI::BeatSaberUI::CreateScrollableSettingsContainer(self->get_transform());
+        UnityW<GameObject> container = BSML::Lite::CreateScrollableSettingsContainer(self->get_transform());
         
         AddConfigValueToggle(container->get_transform(), getSmoothedControllerConfig().Enabled);
         AddConfigValueIncrementFloat(container->get_transform(), getSmoothedControllerConfig().PositionSmoothing, 2, .5f, 0, 20);
@@ -16,10 +21,9 @@ void DidActivate(HMUI::ViewController* self, bool firstActivation, bool addedToH
 
 void SmoothedController::Install() {
     custom_types::Register::AutoRegister();
-    
-    QuestUI::Init();
-    QuestUI::Register::RegisterMainMenuModSettingsViewController(modInfo, DidActivate);
-    QuestUI::Register::RegisterModSettingsViewController(modInfo, DidActivate);
+    BSML::Init();
+
+    BSML::Register::RegisterSettingsMenu("SmoothedController", DidActivate, true);
     
     SmoothedController::Hooks::VRController();
 }

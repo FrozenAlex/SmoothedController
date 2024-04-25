@@ -1,25 +1,24 @@
 #include "main.hpp"
 #include "SmoothedController.hpp"
 #include "SmoothedControllerConfig.hpp"
+#include "logging.hpp"
 
-Logger& getLogger() {
-    static Logger* logger = new Logger(modInfo, LoggerOptions(false, true));
-    return *logger;
-}
 
-extern "C" void setup(ModInfo& info) {
-    info.id = ID;
+
+extern "C" __attribute__((visibility("default"))) void setup(CModInfo& info) {
+    info.id = MOD_ID;
     info.version = VERSION;
-    modInfo = info;
-    
+    info.version_long = 0;
+    modInfo.assign(info);
+
     getSmoothedControllerConfig().Init(modInfo);
-    getLogger().info("Completed SmoothedController setup!");
+    INFO("Completed SmoothedController setup!");
 }
 
-extern "C" void load() {
+extern "C" __attribute__((visibility("default"))) void late_load() {
     il2cpp_functions::Init();
 
-    getLogger().info("Installing SmoothedController...");
+    INFO("Installing SmoothedController...");
     SmoothedController::Install();
-    getLogger().info("Installed SmoothedController!");
+    INFO("Installed SmoothedController!");
 }

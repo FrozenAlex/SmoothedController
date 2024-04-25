@@ -12,6 +12,7 @@
 #include "UnityEngine/XR/XRNode.hpp"
 
 #include <map>
+#include "logging.hpp"
 
 std::map<UnityEngine::XR::XRNode, SafePtr<SmoothedController::Wrapper>> wrappers;
 
@@ -69,16 +70,16 @@ MAKE_HOOK_MATCH(
 
     Vector3 lastTrackedPosition;
     Quaternion localRotation;
-    if (!self->vrPlatformHelper->GetNodePose(self->node, self->nodeIdx, lastTrackedPosition, localRotation)) {
-        if (self->lastTrackedPosition != Vector3::get_zero()) {
-            lastTrackedPosition = self->lastTrackedPosition;
-        } else if (self->node == XRNode::_get_LeftHand()) {
+    if (!self->____vrPlatformHelper->GetNodePose(self->____node, self->____nodeIdx, lastTrackedPosition, localRotation)) {
+        if (Vector3::op_Inequality(self->____lastTrackedPosition,Vector3::get_zero() ) ) {
+            lastTrackedPosition = self->____lastTrackedPosition;
+        } else if (self->____node == XRNode::LeftHand) {
             lastTrackedPosition = Vector3(-.2f, .05f, .0f);
-        } else if (self->node == XRNode::_get_RightHand()) {
+        } else if (self->____node == XRNode::RightHand) {
             lastTrackedPosition = Vector3(.2f, .05f, .0f);
         }
     } else {
-        self->lastTrackedPosition = lastTrackedPosition;
+        self->____lastTrackedPosition = lastTrackedPosition;
     }
 
     self->get_transform()->set_localPosition(lastTrackedPosition);
@@ -87,15 +88,8 @@ MAKE_HOOK_MATCH(
     if (self->get_gameObject()->get_name().starts_with("Controller")) {
         SmoothController(self);
     }
-
-    if (self->transformOffset != nullptr) {
-        self->vrPlatformHelper->AdjustControllerTransform(self->node, self->get_transform(), self->transformOffset->get_positionOffset(), self->transformOffset->get_rotationOffset());
-        return;
-    }
-
-    self->vrPlatformHelper->AdjustControllerTransform(self->node, self->get_transform(), Vector3::get_zero(), Vector3::get_zero());
 }
 
 void SmoothedController::Hooks::VRController() {
-    INSTALL_HOOK(getLogger(), VRController_Update);
+    INSTALL_HOOK(SmoothedController::Logger, VRController_Update);
 }

@@ -19,11 +19,12 @@ set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_compile_options(-frtti -fexceptions)
+add_link_options(-Wl,--exclude-libs,ALL)
+add_compile_options(-frtti -fexceptions -fvisibility=hidden)
 add_compile_options(-O3)
 
 add_compile_definitions(VERSION=\"${MOD_VERSION}\")
-add_compile_definitions(ID=\"${MOD_ID}\")
+add_compile_definitions(MOD_ID=\"${MOD_ID}\")
 
 RECURSE_FILES(CPP_FILES ${SOURCE_DIR}/*.cpp)
 RECURSE_FILES(C_FILES ${SOURCE_DIR}/*.c)

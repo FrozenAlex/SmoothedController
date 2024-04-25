@@ -5,10 +5,7 @@
 #include "beatsaber-hook/shared/utils/logging.hpp"
 #include "custom-types/shared/macros.hpp"
 #include "custom-types/shared/register.hpp"
-#include "modloader/shared/modloader.hpp"
-#include "questui/shared/BeatSaberUI.hpp"
-#include "questui/shared/QuestUI.hpp"
+#include "scotland2/shared/loader.hpp"
 
-inline ModInfo modInfo;
 
-Logger& getLogger();
+inline modloader::ModInfo modInfo = {MOD_ID, VERSION, 0}; // Stores the ID and version of our mod, and is sent to the modloader upon startup

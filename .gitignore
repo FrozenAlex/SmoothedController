@@ -51,5 +51,4 @@ ndkpath.txt
 *.txt
 extern/
 Android.mk.backup
-qpm.shared.json
 mod.json
