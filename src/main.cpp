@@ -15,7 +15,7 @@ extern "C" __attribute__((visibility("default"))) void setup(CModInfo& info) {
     INFO("Completed SmoothedController setup!");
 }
 
-extern "C" __attribute__((visibility("default"))) void late_load() {
+extern "C" __attribute__((visibility("default"))) void load() {
     il2cpp_functions::Init();
 
     INFO("Installing SmoothedController...");

@@ -9,8 +9,8 @@
   "packageId": "com.beatgames.beatsaber",
   "packageVersion": "1.35.0_8016709773",
   "description": "Smoothes your Controller position while in menus to make it less shaky, making the UI easier to use, etc.",
-  "modFiles": [],
-  "lateModFiles": ["${binary}"],
+  "modFiles": ["${binary}"],
+  "lateModFiles": [],
   "libraryFiles": [],
   "fileCopies": []
 }
