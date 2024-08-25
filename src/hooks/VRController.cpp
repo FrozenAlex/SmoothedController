@@ -65,7 +65,7 @@ MAKE_HOOK_MATCH(
 ) {
     using namespace UnityEngine;
     using namespace UnityEngine::XR;
-    
+
     // Because Quest is dumb and we don't have transpilers, we gotta reimplement this entire method :D
 
     Vector3 lastTrackedPosition;
@@ -91,5 +91,5 @@ MAKE_HOOK_MATCH(
 }
 
 void SmoothedController::Hooks::VRController() {
-    INSTALL_HOOK(SmoothedController::Logger, VRController_Update);
+    INSTALL_HOOK_ORIG(SmoothedController::Logger, VRController_Update);
 }
