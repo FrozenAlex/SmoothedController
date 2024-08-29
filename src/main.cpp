@@ -18,6 +18,10 @@ extern "C" __attribute__((visibility("default"))) void setup(CModInfo& info) {
 extern "C" __attribute__((visibility("default"))) void load() {
     il2cpp_functions::Init();
 
+    // Must make sure mod loading order is correct
+    auto fingersaberModInfo = CModInfo{ .id = "fingersaber" };
+    modloader_require_mod(&fingersaberModInfo, CMatchType::MatchType_IdOnly);
+
     INFO("Installing SmoothedController...");
     SmoothedController::Install();
     INFO("Installed SmoothedController!");
