@@ -3,10 +3,20 @@
 #include "main.hpp"
 #include "UnityEngine/Quaternion.hpp"
 #include "UnityEngine/Vector3.hpp"
+#include "sombrero/shared/Vector3Utils.hpp"
+#include "sombrero/shared/QuaternionUtils.hpp"
 
-DECLARE_CLASS_CODEGEN(SmoothedController, Wrapper, ::Il2CppObject,
-    DECLARE_INSTANCE_FIELD(UnityEngine::Vector3, smoothedPosition);
-    DECLARE_INSTANCE_FIELD(UnityEngine::Quaternion, smoothedRotation);
-    DECLARE_INSTANCE_FIELD(float, angleVelocitySnap);
-    DECLARE_CTOR(ctor);
-)
+namespace SmoothedController {
+    class Wrapper {
+        public:
+            Sombrero::FastVector3 smoothedPosition;
+            Sombrero::FastQuaternion smoothedRotation;
+            float angleVelocitySnap;
+            Wrapper() {
+                using namespace UnityEngine;
+                smoothedPosition = Sombrero::FastVector3::zero();
+                smoothedRotation = Sombrero::FastQuaternion::identity();
+                angleVelocitySnap = 1.0f;
+            }
+    };
+}

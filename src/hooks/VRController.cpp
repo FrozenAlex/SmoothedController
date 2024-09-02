@@ -10,50 +10,59 @@
 #include "UnityEngine/Mathf.hpp"
 #include "UnityEngine/Time.hpp"
 #include "UnityEngine/XR/XRNode.hpp"
-
+#include "sombrero/shared/Vector3Utils.hpp"
+#include "sombrero/shared/QuaternionUtils.hpp"
 #include <map>
 #include "logging.hpp"
 
-std::map<UnityEngine::XR::XRNode, SafePtr<SmoothedController::Wrapper>> wrappers;
+std::map<UnityEngine::XR::XRNode, SmoothedController::Wrapper*> wrappers;
 
-void SmoothController(GlobalNamespace::VRController* instance) {
+long long CurrentTimeMs(){
+    // Set up a timer
+    auto lastUpdate = std::chrono::system_clock::now();
+    auto milis = std::chrono::duration_cast<std::chrono::milliseconds>(lastUpdate.time_since_epoch());
+    auto now = milis.count();
+    return now;
+}
+
+void SmoothController(UnityW<GlobalNamespace::VRController> instance) {
     using namespace System;
     using namespace System::Collections::Generic;
     using namespace UnityEngine;
     using namespace UnityEngine::XR;
+    using namespace Sombrero;
 
-    if (!instance || !getSmoothedControllerConfig().Enabled.GetValue()) {
-        return;
-    }
+    static float posSmoth = 20.f - std::clamp(getSmoothedControllerConfig().PositionSmoothing.GetValue(), 0.f, 20.f);
+    static float rotSmoth = 20.f - std::clamp(getSmoothedControllerConfig().RotationSmoothing.GetValue(), 0.f, 20.f);
 
-    static float posSmoth = 20.f - Mathf::Clamp(getSmoothedControllerConfig().PositionSmoothing.GetValue(), 0.f, 20.f);
-    static float rotSmoth = 20.f - Mathf::Clamp(getSmoothedControllerConfig().RotationSmoothing.GetValue(), 0.f, 20.f);
+    auto transform = instance->get_transform();
+    auto node = instance->____node;
 
-    SafePtr<SmoothedController::Wrapper> wrapperI;
-    if (wrappers.find(instance->get_node()) == wrappers.end()) {
-        wrapperI = CRASH_UNLESS(il2cpp_utils::New<SmoothedController::Wrapper*>());
-        wrappers[instance->get_node()] = *wrapperI;
+    SmoothedController::Wrapper* wrapperI;
+    if (!wrappers.contains(node)) {
+        wrapperI = new SmoothedController::Wrapper();
+        wrappers[node] = wrapperI;
     } else {
-        wrapperI = *wrappers[instance->get_node()];
+        wrapperI = wrappers[node];
     }
 
-    float angDiff = Quaternion::Angle(wrapperI->smoothedRotation, instance->get_transform()->get_localRotation());
-    wrapperI->angleVelocitySnap = Math::Min(wrapperI->angleVelocitySnap + angDiff, 90.f);
+    float angDiff = FastQuaternion::Angle(wrapperI->smoothedRotation, transform->get_localRotation());
+    wrapperI->angleVelocitySnap = std::min(wrapperI->angleVelocitySnap + angDiff, 90.f);
 
-    float snapMulti = Mathf::Clamp(wrapperI->angleVelocitySnap / getSmoothedControllerConfig().SmallMovementThresholdAngle.GetValue(), .1f, 2.5f);
+    float snapMulti = std::clamp(wrapperI->angleVelocitySnap / getSmoothedControllerConfig().SmallMovementThresholdAngle.GetValue(), .1f, 2.5f);
 
     if (wrapperI->angleVelocitySnap > .1f) {
-        wrapperI->angleVelocitySnap -= Math::Max(.4f, wrapperI->angleVelocitySnap / 1.7f);
+        wrapperI->angleVelocitySnap -= std::max(.4f, wrapperI->angleVelocitySnap / 1.7f);
     }
 
     if (getSmoothedControllerConfig().PositionSmoothing.GetValue() > 0.f) {
-        wrapperI->smoothedPosition = Vector3::Lerp(wrapperI->smoothedPosition, instance->get_transform()->get_localPosition(), posSmoth * Time::get_deltaTime() * snapMulti);
-        instance->get_transform()->set_localPosition(wrapperI->smoothedPosition);
+        wrapperI->smoothedPosition = FastVector3::Lerp(wrapperI->smoothedPosition, transform->get_localPosition(), posSmoth * Time::get_deltaTime() * snapMulti);
+        transform->set_localPosition(wrapperI->smoothedPosition);
     }
 
     if (getSmoothedControllerConfig().RotationSmoothing.GetValue() > 0.f) {
-        wrapperI->smoothedRotation = Quaternion::Lerp(wrapperI->smoothedRotation, instance->get_transform()->get_localRotation(), rotSmoth * Time::get_deltaTime() * snapMulti);
-        instance->get_transform()->set_localRotation(wrapperI->smoothedRotation);
+        wrapperI->smoothedRotation = FastQuaternion::Lerp(wrapperI->smoothedRotation, transform->get_localRotation(), rotSmoth * Time::get_deltaTime() * snapMulti);
+        transform->set_localRotation(wrapperI->smoothedRotation);
     }
 }
 
@@ -63,29 +72,37 @@ MAKE_HOOK_MATCH(
     void,
     GlobalNamespace::VRController* self
 ) {
+    // If smoothing is disabled, just call the original method
+    if (!getSmoothedControllerConfig().Enabled.GetValue()) return VRController_Update(self);
+
     using namespace UnityEngine;
     using namespace UnityEngine::XR;
+    using namespace Sombrero;
 
     // Because Quest is dumb and we don't have transpilers, we gotta reimplement this entire method :D
 
     Vector3 lastTrackedPosition;
     Quaternion localRotation;
     if (!self->____vrPlatformHelper->GetNodePose(self->____node, self->____nodeIdx, lastTrackedPosition, localRotation)) {
-        if (Vector3::op_Inequality(self->____lastTrackedPosition,Vector3::get_zero() ) ) {
+        if (FastVector3::zero() != self->____lastTrackedPosition) {
             lastTrackedPosition = self->____lastTrackedPosition;
         } else if (self->____node == XRNode::LeftHand) {
-            lastTrackedPosition = Vector3(-.2f, .05f, .0f);
+            lastTrackedPosition = FastVector3(-.2f, .05f, .0f);
         } else if (self->____node == XRNode::RightHand) {
-            lastTrackedPosition = Vector3(.2f, .05f, .0f);
+            lastTrackedPosition = FastVector3(.2f, .05f, .0f);
         }
     } else {
         self->____lastTrackedPosition = lastTrackedPosition;
     }
 
-    self->get_transform()->set_localPosition(lastTrackedPosition);
-    self->get_transform()->set_localRotation(localRotation);
+    auto selftransform = self->get_transform();
+    selftransform->set_localPosition(lastTrackedPosition);
+    selftransform->set_localRotation(localRotation);
 
-    if (self->get_gameObject()->get_name().starts_with("Controller")) {
+    // optimized if (self->get_gameObject()->get_name().starts_with("Controller")) {
+    auto selfGo = self->get_gameObject();
+    auto goName = selfGo->get_name();
+    if (goName->____stringLength > 0 && goName[0] == 'C') {
         SmoothController(self);
     }
 }

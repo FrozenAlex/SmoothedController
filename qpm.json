@@ -1,32 +1,7 @@
 {
+  "version": "0.1.0",
   "sharedDir": "shared",
   "dependenciesDir": "extern",
-  "workspace": {
-		"scripts": {
-			"build": [
-				"pwsh ./scripts/build.ps1"
-			],
-			"copy": [
-				"pwsh ./scripts/copy.ps1"
-			],
-			"qmod": [
-				"pwsh ./scripts/build.ps1",
-				"pwsh ./scripts/createqmod.ps1"
-			],
-			"stack": [
-				"pwsh ./scripts/ndk-stack.ps1"
-			],
-			"tomb": [
-				"pwsh ./scripts/pull-tombstone.ps1"
-			],
-			"restart": [
-				"pwsh ./scripts/restart-game.ps1"
-			],
-			"logcat": [
-				"pwsh ./scripts/start-logging.ps1"
-			]
-		}
-	},
   "info": {
     "name": "Smoothed Controller",
     "id": "smoothedcontroller",
@@ -37,49 +12,82 @@
       "cmake": true
     }
   },
+  "workspace": {
+    "scripts": {
+      "build": [
+        "pwsh ./scripts/build.ps1"
+      ],
+      "copy": [
+        "pwsh ./scripts/copy.ps1"
+      ],
+      "logcat": [
+        "pwsh ./scripts/start-logging.ps1"
+      ],
+      "qmod": [
+        "pwsh ./scripts/build.ps1",
+        "pwsh ./scripts/createqmod.ps1"
+      ],
+      "restart": [
+        "pwsh ./scripts/restart-game.ps1"
+      ],
+      "stack": [
+        "pwsh ./scripts/ndk-stack.ps1"
+      ],
+      "tomb": [
+        "pwsh ./scripts/pull-tombstone.ps1"
+      ]
+    },
+    "qmodIncludeDirs": [],
+    "qmodIncludeFiles": [],
+    "qmodOutput": null
+  },
   "dependencies": [
     {
-			"id": "beatsaber-hook",
-			"versionRange": "^5.1.9",
-			"additionalData": {}
-		},
+      "id": "beatsaber-hook",
+      "versionRange": "^5.1.9",
+      "additionalData": {}
+    },
     {
-			"id": "bs-cordl",
-			"versionRange": "^3700.*",
-			"additionalData": {}
-		},
+      "id": "bs-cordl",
+      "versionRange": "3700.*",
+      "additionalData": {}
+    },
     {
-			"id": "scotland2",
-			"versionRange": "^0.1.4",
-			"additionalData": {
-				"includeQmod": false,
-				"private": true
-			}
-		},
+      "id": "scotland2",
+      "versionRange": "^0.1.4",
+      "additionalData": {
+        "includeQmod": false,
+        "private": true
+      }
+    },
     {
-			"id": "custom-types",
-			"versionRange": "^0.17.8",
-			"additionalData": {}
-		},
+      "id": "custom-types",
+      "versionRange": "^0.17.8",
+      "additionalData": {}
+    },
     {
-			"id": "bsml",
-			"versionRange": "^0.4.42",
-			"additionalData": {
-				"includeQmod": false
-			}
-		},
+      "id": "bsml",
+      "versionRange": "^0.4.42",
+      "additionalData": {
+        "includeQmod": false
+      }
+    },
     {
-			"id": "config-utils",
-			"versionRange": "^1.4.0",
-			"additionalData": {}
-		},
+      "id": "config-utils",
+      "versionRange": "^1.4.0",
+      "additionalData": {}
+    },
     {
-			"id": "paper",
-			"versionRange": "^3.6.3",
-			"additionalData": {
-				"private": true
-			}
-		}
-  ],
-  "additionalData": {}
+      "id": "paper",
+      "versionRange": "^3.6.3",
+      "additionalData": {
+        "private": true
+      }
+    },
+    {
+      "id": "sombrero",
+      "versionRange": "^0.1.42",
+      "additionalData": {}
+    }
+  ]
 }
