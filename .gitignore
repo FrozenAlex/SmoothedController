@@ -52,3 +52,5 @@ ndkpath.txt
 extern/
 Android.mk.backup
 mod.json
+
+.cache/
