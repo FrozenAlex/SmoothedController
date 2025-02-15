@@ -1,23 +1,23 @@
-#include "SmoothedController.hpp"
-#include "SmoothedControllerConfig.hpp"
+#include <map>
 
+#include "autohooks/shared/hooks.hpp"
+#include "SmoothedControllerConfig.hpp"
+#include "sombrero/shared/QuaternionUtils.hpp"
+#include "sombrero/shared/Vector3Utils.hpp"
 #include "types/Wrapper.hpp"
 
+// GlobbalNamespace
 #include "GlobalNamespace/IVRPlatformHelper.hpp"
 #include "GlobalNamespace/VRController.hpp"
 #include "GlobalNamespace/VRControllerTransformOffset.hpp"
-#include "System/Math.hpp"
-#include "UnityEngine/Mathf.hpp"
+
+// UnityEngine
 #include "UnityEngine/Time.hpp"
 #include "UnityEngine/XR/XRNode.hpp"
-#include "sombrero/shared/Vector3Utils.hpp"
-#include "sombrero/shared/QuaternionUtils.hpp"
-#include <map>
-#include "logging.hpp"
 
 std::map<UnityEngine::XR::XRNode, SmoothedController::Wrapper*> wrappers;
 
-long long CurrentTimeMs(){
+long long CurrentTimeMs() {
     // Set up a timer
     auto lastUpdate = std::chrono::system_clock::now();
     auto milis = std::chrono::duration_cast<std::chrono::milliseconds>(lastUpdate.time_since_epoch());
@@ -56,24 +56,23 @@ void SmoothController(UnityW<GlobalNamespace::VRController> instance) {
     }
 
     if (getSmoothedControllerConfig().PositionSmoothing.GetValue() > 0.f) {
-        wrapperI->smoothedPosition = FastVector3::Lerp(wrapperI->smoothedPosition, transform->get_localPosition(), posSmoth * Time::get_deltaTime() * snapMulti);
+        wrapperI->smoothedPosition =
+            FastVector3::Lerp(wrapperI->smoothedPosition, transform->get_localPosition(), posSmoth * Time::get_deltaTime() * snapMulti);
         transform->set_localPosition(wrapperI->smoothedPosition);
     }
 
     if (getSmoothedControllerConfig().RotationSmoothing.GetValue() > 0.f) {
-        wrapperI->smoothedRotation = FastQuaternion::Lerp(wrapperI->smoothedRotation, transform->get_localRotation(), rotSmoth * Time::get_deltaTime() * snapMulti);
+        wrapperI->smoothedRotation =
+            FastQuaternion::Lerp(wrapperI->smoothedRotation, transform->get_localRotation(), rotSmoth * Time::get_deltaTime() * snapMulti);
         transform->set_localRotation(wrapperI->smoothedRotation);
     }
 }
 
-MAKE_HOOK_MATCH(
-    VRController_Update,
-    &GlobalNamespace::VRController::Update,
-    void,
-    GlobalNamespace::VRController* self
-) {
+MAKE_EARLY_ORIG_HOOK_MATCH(VRController_Update, &GlobalNamespace::VRController::Update, void, GlobalNamespace::VRController* self) {
     // If smoothing is disabled, just call the original method
-    if (!getSmoothedControllerConfig().Enabled.GetValue()) return VRController_Update(self);
+    if (!getSmoothedControllerConfig().Enabled.GetValue()) {
+        return VRController_Update(self);
+    }
 
     using namespace UnityEngine;
     using namespace UnityEngine::XR;
@@ -105,8 +104,4 @@ MAKE_HOOK_MATCH(
     if (goName->____stringLength > 0 && goName[0] == 'C') {
         SmoothController(self);
     }
-}
-
-void SmoothedController::Hooks::VRController() {
-    INSTALL_HOOK_ORIG(SmoothedController::Logger, VRController_Update);
 }

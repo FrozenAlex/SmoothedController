@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/QuestPackageManager/QPM.Package/refs/heads/main/qpm.shared.schema.json",
   "config": {
-    "version": "0.1.0",
+    "version": "0.4.0",
     "sharedDir": "shared",
     "dependenciesDir": "extern",
     "info": {
@@ -19,15 +19,39 @@
         "build": [
           "pwsh ./scripts/build.ps1"
         ],
+        "clean": [
+          "pwsh ./scripts/build.ps1 -clean"
+        ],
+        "clean-qmod": [
+          "qpm s clean",
+          "qpm s qmod"
+        ],
         "copy": [
-          "pwsh ./scripts/copy.ps1"
+          "pwsh ./scripts/copy.ps1 $0:?"
+        ],
+        "deepclean": [
+          "pwsh ./scripts/build.ps1 -clean -skipBuild",
+          "qpm clear"
         ],
         "logcat": [
           "pwsh ./scripts/start-logging.ps1"
         ],
+        "make-hooking": [
+          "pwsh ./common-stuff/scripts/make-hooking.ps1"
+        ],
         "qmod": [
-          "pwsh ./scripts/build.ps1",
-          "pwsh ./scripts/createqmod.ps1"
+          "qpm s build",
+          "qpm s update-version",
+          "qpm qmod zip --skip_build",
+          "qpm s update-version -- -restore"
+        ],
+        "rebuild": [
+          "qpm s deepclean",
+          "qpm s build"
+        ],
+        "rebuild-qmod": [
+          "qpm s deepclean",
+          "qpm s qmod"
         ],
         "restart": [
           "pwsh ./scripts/restart-game.ps1"
@@ -37,17 +61,25 @@
         ],
         "tomb": [
           "pwsh ./scripts/pull-tombstone.ps1"
+        ],
+        "update-version": [
+          "pwsh ./scripts/update-version.ps1 $0:?"
         ]
       },
       "ndk": "^27.2.12479018",
       "qmodIncludeDirs": [
-        "build",
-        "extern/libs"
+        "./build",
+        "./extern/libs"
       ],
       "qmodIncludeFiles": [],
-      "qmodOutput": null
+      "qmodOutput": "./Smoothed Controller.qmod"
     },
     "dependencies": [
+      {
+        "id": "autohooks",
+        "versionRange": "^0.1.0",
+        "additionalData": {}
+      },
       {
         "id": "beatsaber-hook",
         "versionRange": "^6.4.0",
@@ -61,9 +93,7 @@
       {
         "id": "bsml",
         "versionRange": "^0.4.49",
-        "additionalData": {
-          "includeQmod": false
-        }
+        "additionalData": {}
       },
       {
         "id": "config-utils",
@@ -84,8 +114,7 @@
         "id": "scotland2",
         "versionRange": "^0.1.6",
         "additionalData": {
-          "includeQmod": false,
-          "private": true
+          "includeQmod": false
         }
       },
       {
@@ -132,19 +161,16 @@
     },
     {
       "dependency": {
-        "id": "libil2cpp",
-        "versionRange": "=0.4.0",
+        "id": "autohooks",
+        "versionRange": "=0.1.1688867040133120",
         "additionalData": {
           "headersOnly": true,
-          "compileOptions": {
-            "systemIncludes": [
-              "il2cpp/external/baselib/Include",
-              "il2cpp/external/baselib/Platforms/Android/Include"
-            ]
-          }
+          "overrideSoName": "libautohooks.so",
+          "branchName": "version/v0_1_1688867040133120",
+          "cmake": true
         }
       },
-      "version": "0.4.0"
+      "version": "0.1.1688867040133120"
     },
     {
       "dependency": {
@@ -190,6 +216,22 @@
         }
       },
       "version": "0.1.43"
+    },
+    {
+      "dependency": {
+        "id": "libil2cpp",
+        "versionRange": "=0.4.0",
+        "additionalData": {
+          "headersOnly": true,
+          "compileOptions": {
+            "systemIncludes": [
+              "il2cpp/external/baselib/Include",
+              "il2cpp/external/baselib/Platforms/Android/Include"
+            ]
+          }
+        }
+      },
+      "version": "0.4.0"
     },
     {
       "dependency": {
