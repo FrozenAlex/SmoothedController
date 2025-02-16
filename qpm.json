@@ -71,7 +71,7 @@
       "./extern/libs"
     ],
     "qmodIncludeFiles": [],
-    "qmodOutput": "./Smoothed Controller.qmod"
+    "qmodOutput": "./SmoothedController.qmod"
   },
   "dependencies": [
     {
