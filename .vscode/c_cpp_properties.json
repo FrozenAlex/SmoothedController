@@ -2,9 +2,8 @@
   "configurations": [
     {
       "defines": [
-        "ID=\"SmoothedController\"",
-        "VERSION=\"1.5.2\"",
-        "USE_CODEGEN_FIELDS",
+        "MOD_ID=\"smoothedcontroller\"",
+        "VERSION=\"0.1.0\"",
         "__GNUC__",
         "__aarch64__"
       ],
@@ -12,18 +11,16 @@
         "${workspaceFolder}/extern/includes/libil2cpp/il2cpp/libil2cpp",
         "${workspaceFolder}/extern/includes/codegen/include",
         "${workspaceFolder}/extern/includes",
-        "${workspaceFolder}/include/plthook",
         "${workspaceFolder}/include",
         "${workspaceFolder}/shared",
         "${workspaceFolder}",
-        "C:/Users/Kaitlyn/AppData/Local/Android/Sdk/ndk/22.1.7171670/**",
         "${default}"
       ],
       "name": "Quest",
-      "compileCommands": "${workspaceFolder}/build/compile_commands.json",
       "cStandard": "c11",
       "cppStandard": "c++20",
-      "intelliSenseMode": "clang-x64"
+      "intelliSenseMode": "clang-x64",
+      "compileCommands": "${workspaceFolder}/build/compile_commands.json"
     }
   ],
   "version": 4

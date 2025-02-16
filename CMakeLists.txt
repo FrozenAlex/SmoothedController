@@ -1,62 +1,81 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.22)
 
-include(qpm_defines.cmake)
+option(QUEST "Build for quest" ON)
 
+# Globals
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED 20)
-
-project(${COMPILE_ID})
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# Enable link time optimization
-# In my experience, this can be highly unstable but it nets a huge size optimization and likely performance
-# However, the instability was seen using Android.mk/ndk-build builds. With Ninja + CMake, this problem seems to have been solved.
-# As always, test thoroughly
-# - Fern
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+add_compile_options(-frtti -fexceptions -fvisibility=hidden -fPIE -fPIC -Wno-invalid-offsetof -Werror=nonportable-include-path)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# Include. Include order matters!
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/utils.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/qpm.cmake)
 
-add_link_options(-Wl,--exclude-libs,ALL)
-add_compile_options(-frtti -fexceptions -fvisibility=hidden)
-add_compile_options(-O3)
+set(GIT_HEADER_FILE ${CMAKE_CURRENT_SOURCE_DIR}/include/git-info.h)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/git.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/write-version.cmake)
 
-add_compile_definitions(VERSION=\"${MOD_VERSION}\")
-add_compile_definitions(MOD_ID=\"${MOD_ID}\")
+if(${CMAKE_BUILD_TYPE} STREQUAL "RELEASE" OR ${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo" OR ${CMAKE_BUILD_TYPE} STREQUAL "MinSizeRel")
+        # Better optimizations
+        add_compile_options(-O3)
 
-RECURSE_FILES(CPP_FILES ${SOURCE_DIR}/*.cpp)
-RECURSE_FILES(C_FILES ${SOURCE_DIR}/*.c)
+        # LTO
+        set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+        add_compile_options(-flto)
+endif()
 
-add_library(${COMPILE_ID} SHARED ${CPP_FILES} ${C_FILES})
+if(${CMAKE_BUILD_TYPE} STREQUAL "DEBUG" OR ${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
+        add_compile_options(-g)
+endif()
 
-target_include_directories(${COMPILE_ID} PRIVATE .)
-target_include_directories(${COMPILE_ID} PRIVATE ${SOURCE_DIR})
-target_include_directories(${COMPILE_ID} PRIVATE ${INCLUDE_DIR})
-target_include_directories(${COMPILE_ID} PRIVATE ${EXTERN_DIR}/includes/${CODEGEN_ID}/include)
-target_include_directories(${COMPILE_ID} PUBLIC ${SHARED_DIR})
+# Targets
+if(QUEST)
+        include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/targets/quest.cmake)
+endif()
 
-target_link_libraries(${COMPILE_ID} PRIVATE -llog)
+# Post build
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/strip.cmake)
 
-include(extern.cmake)
+# stop symbols leaking
+# TODO: Fix
+# add_link_options(-Wl, --exclude-libs, ALL)
+project( smoothedcontroller
+        VERSION ${PACKAGE_VERSION})
 
-add_custom_command(TARGET ${COMPILE_ID} POST_BUILD
-    COMMAND ${CMAKE_STRIP} -d --strip-all "lib${COMPILE_ID}.so" -o "stripped_lib${COMPILE_ID}.so"
-    COMMENT "Strip debug symbols on binary."
+add_compile_definitions(MOD_ID="${CMAKE_PROJECT_NAME}")
+add_compile_definitions(VERSION="${CMAKE_PROJECT_VERSION}")
+
+# Set COMPILE_ID for qpm purposes
+set(COMPILE_ID ${CMAKE_PROJECT_NAME})
+
+# recursively get all src files
+RECURSE_FILES(cpp_file_list ${SOURCE_DIR}/*.cpp)
+RECURSE_FILES(c_file_list ${SOURCE_DIR}/*.c)
+
+add_library(
+        ${CMAKE_PROJECT_NAME}
+        SHARED
+        ${cpp_file_list}
+        ${c_file_list}
 )
 
-add_custom_command(TARGET ${COMPILE_ID} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory debug
-    COMMENT "Create directory for debug symbols."
-)
+# for inline hook
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE -llog)
 
-add_custom_command(TARGET ${COMPILE_ID} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E rename lib${COMPILE_ID}.so debug/lib${COMPILE_ID}.so
-    COMMENT "Rename the binary to debug_ since it has debug symbols."
-)
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${INCLUDE_DIR})
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${SHARED_DIR})
 
-add_custom_command(TARGET ${COMPILE_ID} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E rename stripped_lib${COMPILE_ID}.so lib${COMPILE_ID}.so
-    COMMENT "Rename the stripped binary."
-)
+# beatsaber hook inline hook
+
+RECURSE_FILES(src_inline_hook_beatsaber_hook_local_extra_c ${EXTERN_DIR}/includes/beatsaber-hook/shared/inline-hook/*.c)
+RECURSE_FILES(src_inline_hook_beatsaber_hook_local_extra_cpp ${EXTERN_DIR}/includes/beatsaber-hook/shared/inline-hook/*.cpp)
+
+target_sources(${COMPILE_ID} PRIVATE ${src_inline_hook_beatsaber_hook_local_extra_c})
+target_sources(${COMPILE_ID} PRIVATE ${src_inline_hook_beatsaber_hook_local_extra_cpp})
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/assets.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/user-includes.cmake")
