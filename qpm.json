@@ -42,38 +42,33 @@
   },
   "dependencies": [
     {
-      "id": "autohooks",
-      "versionRange": "^0.1.0",
-      "additionalData": {}
-    },
-    {
       "id": "beatsaber-hook",
-      "versionRange": "^6.4.2",
+      "versionRange": "^7.4.0",
       "additionalData": {}
     },
     {
       "id": "bs-cordl",
-      "versionRange": "4008.*",
+      "versionRange": "^4100.0.1",
       "additionalData": {}
     },
     {
       "id": "bsml",
-      "versionRange": "^0.4.55",
+      "versionRange": "^0.6.0",
       "additionalData": {}
     },
     {
       "id": "config-utils",
-      "versionRange": "^2.0.3",
+      "versionRange": "^2.1.0",
       "additionalData": {}
     },
     {
       "id": "custom-types",
-      "versionRange": "^0.18.3",
+      "versionRange": "^0.19.0",
       "additionalData": {}
     },
     {
       "id": "paper2_scotland2",
-      "versionRange": "^4.6.4",
+      "versionRange": "^4.7.0",
       "additionalData": {}
     },
     {
@@ -86,6 +81,11 @@
     {
       "id": "sombrero",
       "versionRange": "^0.1.43",
+      "additionalData": {}
+    },
+    {
+      "id": "flamingo",
+      "versionRange": "^1.1.2",
       "additionalData": {}
     }
   ]

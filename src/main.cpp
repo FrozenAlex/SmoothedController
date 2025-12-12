@@ -1,6 +1,5 @@
 #include "main.hpp"
 
-#include "autohooks/shared/hooks.hpp"
 #include "beatsaber-hook/shared/utils/il2cpp-functions.hpp"
 #include "bsml/shared/BSML.hpp"
 #include "custom-types/shared/register.hpp"
@@ -37,27 +36,5 @@ MOD_EXPORT_FUNC void load() {
     auto fingersaberModInfo = CModInfo{.id = "fingersaber"};
     modloader_require_mod(&fingersaberModInfo, CMatchType::MatchType_IdOnly);
 
-    // Get the number of early hooks that will be installed.
-    auto earlyHookCount = EARLY_HOOK_COUNT;
-
-    // install early hooks
-    if (earlyHookCount > 0) {
-        Logger.info("Installing {} early hook{}", earlyHookCount, earlyHookCount == 0 || earlyHookCount > 1 ? "s" : "");
-        INSTALL_EARLY_HOOKS();
-        Logger.info("Finished installing early hook{}", earlyHookCount == 0 || earlyHookCount > 1 ? "s" : "");
-    }
-}
-
-/// @brief Called later on in the game loading - a good time to install function hooks
-/// @return
-MOD_EXPORT_FUNC void late_load() {
-    // Get the number of late hooks that will be installed.
-    auto lateHookCount = LATE_HOOK_COUNT;
-
-    // Install late hooks
-    if (lateHookCount > 0) {
-        Logger.info("Installing {} late hook{}", lateHookCount, lateHookCount > 1 ? "s" : "");
-        INSTALL_LATE_HOOKS();
-        Logger.info("Finished installing late hook{}", lateHookCount == 0 || lateHookCount > 1 ? "s" : "");
-    }
+    SmoothedController::Hooks::VRController();
 }

@@ -1,10 +1,12 @@
 #include <map>
 
-#include "autohooks/shared/hooks.hpp"
+#include "SmoothedController.hpp"
 #include "SmoothedControllerConfig.hpp"
 #include "sombrero/shared/QuaternionUtils.hpp"
 #include "sombrero/shared/Vector3Utils.hpp"
 #include "types/Wrapper.hpp"
+#include "logger.hpp"
+#include "beatsaber-hook/shared/utils/hooking.hpp"
 
 // GlobbalNamespace
 #include "GlobalNamespace/IVRPlatformHelper.hpp"
@@ -68,7 +70,12 @@ void SmoothController(UnityW<GlobalNamespace::VRController> instance) {
     }
 }
 
-MAKE_EARLY_ORIG_HOOK_MATCH(VRController_Update, &GlobalNamespace::VRController::Update, void, GlobalNamespace::VRController* self) {
+MAKE_HOOK_MATCH(
+    VRController_Update,
+    &GlobalNamespace::VRController::Update,
+    void,
+    GlobalNamespace::VRController* self
+) {
     // If smoothing is disabled, just call the original method
     if (!getSmoothedControllerConfig().Enabled.GetValue()) {
         return VRController_Update(self);
@@ -104,4 +111,8 @@ MAKE_EARLY_ORIG_HOOK_MATCH(VRController_Update, &GlobalNamespace::VRController::
     if (goName->____stringLength > 0 && goName[0] == 'C') {
         SmoothController(self);
     }
+}
+
+void SmoothedController::Hooks::VRController() {
+    INSTALL_HOOK(Logger, VRController_Update);
 }
