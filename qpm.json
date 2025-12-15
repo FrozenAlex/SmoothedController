@@ -53,12 +53,12 @@
     },
     {
       "id": "bsml",
-      "versionRange": "^0.6.0",
+      "versionRange": "^0.5.0",
       "additionalData": {}
     },
     {
       "id": "config-utils",
-      "versionRange": "^2.1.0",
+      "versionRange": "^2.0.4",
       "additionalData": {}
     },
     {
