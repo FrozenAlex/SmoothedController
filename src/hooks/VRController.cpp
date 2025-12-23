@@ -89,16 +89,16 @@ MAKE_HOOK_MATCH(
 
     Vector3 lastTrackedPosition;
     Quaternion localRotation;
-    if (!self->____vrPlatformHelper->GetNodePose(self->____node, self->____nodeIdx, lastTrackedPosition, localRotation)) {
-        if (FastVector3::zero() != self->____lastTrackedPosition) {
-            lastTrackedPosition = self->____lastTrackedPosition;
-        } else if (self->____node == XRNode::LeftHand) {
+    if (!self->_vrPlatformHelper->GetNodePose(self->_node, self->_nodeIndex, lastTrackedPosition, localRotation)) {
+        if (FastVector3::zero() != self->_lastTrackedPosition) {
+            lastTrackedPosition = self->_lastTrackedPosition;
+        } else if (self->_node == XRNode::LeftHand) {
             lastTrackedPosition = FastVector3(-.2f, .05f, .0f);
-        } else if (self->____node == XRNode::RightHand) {
+        } else if (self->_node == XRNode::RightHand) {
             lastTrackedPosition = FastVector3(.2f, .05f, .0f);
         }
     } else {
-        self->____lastTrackedPosition = lastTrackedPosition;
+        self->_lastTrackedPosition = lastTrackedPosition;
     }
 
     auto selftransform = self->get_transform();
@@ -108,7 +108,7 @@ MAKE_HOOK_MATCH(
     // optimized if (self->get_gameObject()->get_name().starts_with("Controller")) {
     auto selfGo = self->get_gameObject();
     auto goName = selfGo->get_name();
-    if (goName->____stringLength > 0 && goName[0] == 'C') {
+    if (goName->_stringLength > 0 && goName[0] == 'C') {
         SmoothController(self);
     }
 }
